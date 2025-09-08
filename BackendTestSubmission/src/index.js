@@ -1,10 +1,18 @@
 const express = require('express');
 const { Log } = require('../../LoggingMiddleware/src/index'); // Adjust path as needed
+const cors = require('cors');
 const app = express();
-const PORT = 3000;
+const PORT = 5000;
 const BASE_URL = `http://localhost:${PORT}`;
 
 const shortUrls = new Map();
+
+// Enable CORS for localhost:3000 (must be before routes)
+app.use(cors({
+    origin: 'http://localhost:3000'
+}));
+
+app.use(express.json());
 
 // Function to generate a unique random shortcode (6 alphanumeric chars)
 function generateShortcode() {
@@ -29,8 +37,6 @@ function isValidUrl(url) {
 function isValidShortcode(code) {
     return /^[a-zA-Z0-9]{4,10}$/.test(code);
 }
-
-app.use(express.json());
 
 // POST /shorturls - Create shortened URL
 app.post('/shorturls', async (req, res) => {
@@ -101,6 +107,11 @@ app.get('/shorturls/:shortcode', async (req, res) => {
         await Log('backend', 'info', 'service', `Redirecting shortcode: ${code} to ${entry.originalUrl}`);
     } catch (logError) {
         console.error('Logging failed:', logError.message); // Fallback
+    }
+
+    // Ensure the originalUrl is valid before redirecting
+    if (!isValidUrl(entry.originalUrl)) {
+        return res.status(400).json({ error: 'Invalid original URL stored' });
     }
 
     res.redirect(301, entry.originalUrl);
