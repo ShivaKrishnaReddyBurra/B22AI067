@@ -75,7 +75,7 @@ async function Log(stack, level, pkg, message) {
     const accessToken = await getAccessToken(); // logging in 
 
     try {
-        const response = await fetch(url, {
+        const response = await fetch(url, { // making the call to the logs
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
